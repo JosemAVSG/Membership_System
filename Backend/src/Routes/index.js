@@ -5,7 +5,6 @@ const {
     logout,
     verifyToken,
     getUsers,
-    getProfile
 } = require("../Controllers/authController");
 const { validateSchema } = require("../Middlewares/validateSchema");
 const { registerSchema, loginSchema } = require("../Schemas/authSchema");
@@ -18,7 +17,6 @@ router.post('/register', validateSchema(registerSchema), register);
 router.post('/logout', logout);
 
 router.get('/verify', verifyToken);
-router.get('/users', getUsers);
-router.get('profile', authrequired, getProfile);
+router.get('/users', authrequired, getUsers);
 
 module.exports = router

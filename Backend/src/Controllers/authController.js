@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypts = require("bcryptjs");
 const gereateToken = require("../libs/jwt");
-const userModel = require("../Models/userModel");
+const clientModel = require("../Models/clientModel");
+const adminModel = require("../Models/adminModel");
 const TOKEN_SECRET = process.env.TOKEN_SECRET;
 
 const register = async (req, res) => {
@@ -19,11 +20,11 @@ const register = async (req, res) => {
   const passhash = bcrypts.hash(password);
 
   try {
-    const user = await userModel.findOne({ email: email });
+    const user = await adminModel.findOne({ email: email });
     if (user) {
       return res.status(400).json({ error: "User already exists" });
     }
-    const newUser = new userModel({
+    const newUser = new adminModel({
       name,
       email,
       password: passhash,
@@ -48,7 +49,7 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const userFound = await userModel.findOne({ email: email });
+    const userFound = await adminModel.findOne({ email: email });
     if (!userFound) {
       return res.status(400).json({ error: "User not found" });
     }
@@ -69,7 +70,6 @@ const login = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 const logout = async (req, res) => {
   res.cookie = ("token", "", { expires: new Date(0) });
   res.sendStatus(200);
@@ -80,7 +80,7 @@ const verifyToken = async (req, res) => {
   }
   const { token } = req.cookies;
   jwt.verify(token, TOKEN_SECRET, async (err, decoded) => {
-    const user = await userModel.findById(decoded.id);
+    const user = await adminModel.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ error: "Invalid token" });
     }
@@ -97,13 +97,74 @@ const verifyToken = async (req, res) => {
     });
   });
 };
-const getUsers = async (req, res) => {
+const getClients = async (req, res) => {
   try {
-    const users = await userModel.find();
+    const users = await clientModel.find();
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+const createClients = async (req, res) => {
+  const { name, email, phone, estado, fechaRegistro } = req.body;
+  if (!name || !email || !phone || !estado || !fechaRegistro) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
 
-module.exports = { register, login, logout, verifyToken, getUsers};
+  try {
+    const newClient = new clientModel({
+      name,
+      email,
+      phone,
+      estado,
+      fechaRegistro,
+    });
+
+    const insertedUser = await newClient.save();
+    res.status(201).json(insertedUser);
+  } catch (error) {}
+};
+const updateClients = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, phone, estado, fechaRegistro } = req.body;
+  if (!name || !email || !phone || !estado || !fechaRegistro) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+  try {
+    const updatedUser = await clientModel.findByIdAndUpdate(
+      id,
+      {
+        name,
+        email,
+        phone,
+        estado,
+        fechaRegistro,
+      },
+      { new: true }
+    );
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const updateClientsStatus = async (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+  if (!estado) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+  try {
+    const updatedUser = await clientModel.findByIdAndUpdate(
+      id,
+      {
+        estado,
+      },
+      { new: true }
+    );
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+module.exports = { register, login, logout, verifyToken, getClients, createClients, updateClients, updateClientsStatus };

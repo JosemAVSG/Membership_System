@@ -4,7 +4,10 @@ const {
     login,
     logout,
     verifyToken,
-    getUsers,
+    getClients,
+    createClients,
+    updateClients,
+    updateClientsStatus,
 } = require("../Controllers/authController");
 const { validateSchema } = require("../Middlewares/validateSchema");
 const { registerSchema, loginSchema } = require("../Schemas/authSchema");
@@ -17,6 +20,10 @@ router.post('/register', validateSchema(registerSchema), register);
 router.post('/logout', logout);
 
 router.get('/verify', verifyToken);
-router.get('/users', authrequired, getUsers);
+
+router.get('/clients', getClients);
+router.post('/clients', authrequired, createClients);
+router.put('/clients/:id', authrequired, updateClients);
+router.put('/clients/status/:id', authrequired, updateClientsStatus);
 
 module.exports = router
